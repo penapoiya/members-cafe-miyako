@@ -62,18 +62,27 @@ export default function Access() {
             </a>
           </div>
 
-          {/* 地図エリア */}
-          <div className="aspect-[4/3] bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] flex items-center justify-center reveal reveal-delay-2">
+          {/* 地図エリア（Googleマップへリンク） */}
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=京都市中京区大黒町+河原町通り"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="aspect-[4/3] bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] flex items-center justify-center reveal reveal-delay-2 no-underline transition-all duration-400 hover:border-[var(--border-accent)] group"
+          >
             <div className="text-center">
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="var(--text-dim)" strokeWidth="1" className="mx-auto mb-4">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="var(--text-dim)" strokeWidth="1" className="mx-auto mb-4 group-hover:stroke-[var(--rose-gold)] transition-colors">
                 <path d="M20 4c-6.6 0-12 5.4-12 12 0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z" />
                 <circle cx="20" cy="16" r="4" />
               </svg>
-              <span className="font-[family-name:var(--font-cormorant)] text-[0.65rem] tracking-[0.3em] uppercase text-[var(--text-dim)]">
+              <span className="font-[family-name:var(--font-cormorant)] text-[0.65rem] tracking-[0.3em] uppercase text-[var(--text-dim)] group-hover:text-[var(--rose-gold)] transition-colors">
                 京都・河原町エリア
               </span>
+              <br />
+              <span className="text-[0.6rem] text-[var(--text-dim)] mt-2 inline-block group-hover:text-[var(--text-secondary)] transition-colors">
+                Google Map で開く →
+              </span>
             </div>
-          </div>
+          </a>
         </div>
 
         {/* お問い合わせフォーム（控えめに） */}

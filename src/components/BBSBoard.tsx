@@ -39,7 +39,14 @@ export default function BBSBoard({ posts: initialPosts }: { posts: BBSPost[] }) 
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editMessage, setEditMessage] = useState("");
+  const [replyingId, setReplyingId] = useState<string | null>(null);
+  const [replyName, setReplyName] = useState("");
+  const [replyText, setReplyText] = useState("");
   const formInteracted = useRef(false);
+
+  const myDeviceId = typeof window !== "undefined" ? getDeviceId() : "";
 
   // BBS ページ閲覧トラッキング
   useEffect(() => {
@@ -243,17 +250,141 @@ export default function BBSBoard({ posts: initialPosts }: { posts: BBSPost[] }) 
                     </span>
                   </div>
 
-                  {/* メッセージ */}
-                  <p className="text-[0.9rem] text-[var(--rose-gold-light)] leading-[1.8] mb-2 pl-11">
-                    {post.message}
-                  </p>
+                  {/* メッセージ（編集モード or 表示） */}
+                  {editingId === post.id ? (
+                    <div className="pl-11 mb-2">
+                      <textarea
+                        value={editMessage}
+                        onChange={(e) => setEditMessage(e.target.value)}
+                        className="w-full bg-[var(--bg-tertiary)] border border-[var(--rose-gold)] text-[var(--text-primary)] text-[0.85rem] px-3 py-2 outline-none resize-vertical min-h-[60px]"
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={async () => {
+                            const res = await fetch(`/api/bbs/${post.id}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ message: editMessage, deviceId: myDeviceId }),
+                            });
+                            if (res.ok) {
+                              setPosts((prev) => prev.map((p) => p.id === post.id ? { ...p, message: editMessage } : p));
+                              setEditingId(null);
+                            } else {
+                              alert("編集できませんでした");
+                            }
+                          }}
+                          className="text-[0.7rem] bg-[var(--rose-gold)] text-[var(--bg-primary)] px-3 py-1 border-none cursor-pointer"
+                        >
+                          保存
+                        </button>
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="text-[0.7rem] text-[var(--text-dim)] px-3 py-1 border border-[var(--border-subtle)] bg-transparent cursor-pointer"
+                        >
+                          キャンセル
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[0.9rem] text-[var(--rose-gold-light)] leading-[1.8] mb-2 pl-11">
+                      {post.message}
+                    </p>
+                  )}
 
-                  {/* 日付 */}
-                  <p className="text-[0.7rem] text-[var(--text-dim)] pl-11">
-                    投稿日: {dateStr}
-                  </p>
+                  {/* 日付 + 操作ボタン */}
+                  <div className="flex items-center gap-3 pl-11 flex-wrap">
+                    <p className="text-[0.7rem] text-[var(--text-dim)]">
+                      投稿日: {dateStr}
+                    </p>
+                    {/* 返信ボタン（全員） */}
+                    {!post.reply && replyingId !== post.id && (
+                      <button
+                        onClick={() => { setReplyingId(post.id); setReplyText(""); }}
+                        className="text-[0.65rem] text-[var(--text-dim)] hover:text-[var(--champagne)] bg-transparent border border-[var(--border-subtle)] px-2 py-0.5 cursor-pointer transition-colors"
+                      >
+                        返信
+                      </button>
+                    )}
+                    {/* 編集・削除ボタン（本人のみ） */}
+                    {post.deviceId === myDeviceId && editingId !== post.id && (
+                      <>
+                        <button
+                          onClick={() => { setEditingId(post.id); setEditMessage(post.message); }}
+                          className="text-[0.65rem] text-[var(--text-dim)] hover:text-[var(--champagne)] bg-transparent border border-[var(--border-subtle)] px-2 py-0.5 cursor-pointer transition-colors"
+                        >
+                          編集
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!confirm("この投稿を削除しますか？")) return;
+                            const res = await fetch(`/api/bbs/${post.id}?deviceId=${myDeviceId}`, { method: "DELETE" });
+                            if (res.ok) {
+                              setPosts((prev) => prev.filter((p) => p.id !== post.id));
+                            } else {
+                              alert("削除できませんでした");
+                            }
+                          }}
+                          className="text-[0.65rem] text-[#E06060] hover:text-[#ff6666] bg-transparent border border-[rgba(224,96,96,0.3)] px-2 py-0.5 cursor-pointer transition-colors"
+                        >
+                          削除
+                        </button>
+                      </>
+                    )}
+                  </div>
 
-                  {/* スタッフ返信 */}
+                  {/* 返信フォーム */}
+                  {replyingId === post.id && (
+                    <div className="ml-11 mt-4 border-l-2 border-[#C0A0D0] p-4 bg-[rgba(192,160,208,0.04)]">
+                      <p className="text-[0.75rem] text-[#C0A0D0] mb-2 font-medium">返信を書く</p>
+                      <input
+                        type="text"
+                        value={replyName}
+                        onChange={(e) => setReplyName(e.target.value)}
+                        placeholder="名前（例: スタッフ）"
+                        className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-[0.85rem] px-3 py-2 mb-2 outline-none focus:border-[#C0A0D0] placeholder:text-[var(--text-dim)]"
+                      />
+                      <textarea
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        placeholder="返信メッセージ"
+                        rows={3}
+                        className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-[0.85rem] px-3 py-2 outline-none focus:border-[#C0A0D0] resize-vertical placeholder:text-[var(--text-dim)]"
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={async () => {
+                            if (!replyText.trim()) return;
+                            const rName = replyName.trim() || "スタッフ";
+                            const res = await fetch(`/api/bbs/${post.id}/reply`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ reply: replyText.trim(), replyName: rName }),
+                            });
+                            if (res.ok) {
+                              setPosts((prev) => prev.map((p) =>
+                                p.id === post.id ? { ...p, reply: replyText.trim(), replyName: rName, replyDate: new Date().toISOString() } : p
+                              ));
+                              setReplyingId(null);
+                              setReplyName("");
+                            } else {
+                              alert("返信に失敗しました");
+                            }
+                          }}
+                          className="text-[0.7rem] bg-[#C0A0D0] text-white px-3 py-1 border-none cursor-pointer"
+                        >
+                          返信する
+                        </button>
+                        <button
+                          onClick={() => setReplyingId(null)}
+                          className="text-[0.7rem] text-[var(--text-dim)] px-3 py-1 border border-[var(--border-subtle)] bg-transparent cursor-pointer"
+                        >
+                          キャンセル
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 返信表示 */}
                   {post.reply && (
                     <div className="ml-11 mt-4 border-l-2 border-[#C0A0D0] bg-[rgba(192,160,208,0.06)] p-4">
                       <div className="flex items-center gap-2 mb-2">
@@ -261,7 +392,7 @@ export default function BBSBoard({ posts: initialPosts }: { posts: BBSPost[] }) 
                           S
                         </div>
                         <span className="font-[family-name:var(--font-shippori)] text-[0.8rem] font-medium text-[#C0A0D0]">
-                          返信 from スタッフ
+                          返信 from {post.replyName || "スタッフ"}
                         </span>
                       </div>
                       <p className="text-[0.85rem] text-[var(--text-secondary)] leading-[1.8] pl-8 whitespace-pre-wrap">

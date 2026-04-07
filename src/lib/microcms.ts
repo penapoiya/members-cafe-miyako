@@ -17,8 +17,10 @@ export type BBSPost = {
   date: string;
   gender: string[] | string;
   message: string;
-  reply?: string;       // スタッフからの返信（microCMS管理画面で入力）
-  replyDate?: string;   // 返信日時
+  deviceId?: string;
+  reply?: string;
+  replyName?: string;
+  replyDate?: string;
 } & MicroCMSListContent;
 
 export type Event = {

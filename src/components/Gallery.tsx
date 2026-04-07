@@ -2,7 +2,6 @@ import Image from "next/image";
 import type { GalleryImage } from "@/lib/microcms";
 
 const labels = ["Interior", "Counter", "Drinks", "Private", "Night"];
-const overlays = ["京都らしい和の空間", "カウンター席", "こだわりの一杯", "個室をご用意", "特別な夜を"];
 
 export default function Gallery({ images }: { images: GalleryImage[] }) {
   return (
@@ -31,7 +30,7 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
                   {img?.image?.url ? (
                     <Image
                       src={img.image.url}
-                      alt={img.title || overlays[i]}
+                      alt={img.title || labels[i]}
                       fill
                       sizes="(max-width: 600px) 100vw, (max-width: 900px) 50vw, 33vw"
                       className="object-cover"
@@ -41,11 +40,6 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
                       {labels[i]}
                     </span>
                   )}
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(10,10,10,0.8)] from-0% via-transparent via-40% opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
-                  <span className="font-[family-name:var(--font-shippori)] text-[0.8rem] text-[var(--champagne)] tracking-[0.1em]">
-                    {overlays[i]}
-                  </span>
                 </div>
               </div>
             );
