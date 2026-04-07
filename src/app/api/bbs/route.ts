@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -51,6 +52,31 @@ export async function POST(request: Request) {
       }
 
       const result = await res.json();
+
+      // ── Supabase: 性別を「明示」として gender_predictions に upsert ──
+      // この device_id は「投稿者本人が申告した性別」なので最高信頼度（1.0）
+      try {
+        const supabase = getSupabaseAdmin();
+        if (supabase && deviceId) {
+          await supabase
+            .from("gender_predictions")
+            .upsert(
+              {
+                device_id: deviceId,
+                predicted_gender: gender,
+                confidence: 1.0,
+                method: "explicit",
+                features: { source: "bbs_post", post_id: result.id },
+                evidence_count: 1,
+                updated_at: now,
+              },
+              { onConflict: "device_id" }
+            );
+        }
+      } catch (e) {
+        console.error("[bbs] supabase gender upsert error:", e);
+      }
+
       return NextResponse.json({
         id: result.id,
         name,

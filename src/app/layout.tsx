@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Shippori_Mincho, Zen_Kaku_Gothic_New } from "next/font/google";
 import Analytics from "@/components/Analytics";
+import Tracker from "@/components/Tracker";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -42,6 +43,7 @@ export default function RootLayout({
     >
       <body className="font-[family-name:var(--font-zen)]">
         <Analytics />
+        <Tracker />
         {children}
       </body>
     </html>
